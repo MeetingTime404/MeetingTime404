@@ -14,21 +14,4 @@
     <% end %>
   </ul>
 <div>
-<div>
-  <% @all_games.pending.each do |game| %>
-    <div>
-      Game #<%= game.id %>
-      Current sattus: <%= game.status %>
-    </div>
-  <% end %>
-</div>
-<br />
-<div>
-  Showing most recent game first
-  <% @all_games.pending.recent.each do |game| %>
-    <div>
-      Game #<%= game.id %>
-      Current sattus: <%= game.status %>
-    </div>
-  <% end %>
-</div>
+
