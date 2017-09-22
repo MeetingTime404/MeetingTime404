@@ -10,6 +10,12 @@ class GamesController < ApplicationController
   end
 
   def create
+    @game = Game.create(:white_player_id => current_user.id, :status => "pending")
+    if @game.valid?
+      redirect_to games_path
+    else
+      return render text: 'invalid game', status: :forbidden
+    end     
   end
 
   def show

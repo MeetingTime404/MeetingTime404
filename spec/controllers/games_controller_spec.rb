@@ -47,9 +47,17 @@ RSpec.describe GamesController, type: :controller do
       expect(response).to have_http_status(:success)
     end
 
-      describe 'game#create action' do
+  end
 
-      end
+  describe 'game#create action' do
+    it "should successfully create a game" do
+      user = FactoryGirl.create(:user)
+      sign_in user
+      get :create
+      expect(response).to redirect_to games_path
+      @game = Game.last
+      expect(@game.white_player_id).to eq(user.id)
+    end
   end
 
 end
