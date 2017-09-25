@@ -19,6 +19,7 @@
     <% end %>
 
     <% if user_signed_in? %>
+      <%= link_to "Create", games_path(user_id: :user_id), method: :post %>
       <%= link_to 'Sign Out', destroy_user_session_path, method: :delete %>
     <% end %>
     
