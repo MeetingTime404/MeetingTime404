@@ -12,6 +12,9 @@ class ChessPiece < ApplicationRecord
   def move_to(x_target, y_target)
     if valid_move?(x_target.to_i, y_target.to_i)
       update_attributes(x: x_target, y: y_target)
+      if check?()
+        game.update_attributes(status: "in_check")
+      end
     else
       false
     end
@@ -22,6 +25,15 @@ class ChessPiece < ApplicationRecord
     return false unless in_board?(x_target, y_target)
     return false if obstructed?(x_target, y_target)
     true
+  end
+
+  def check?()
+    color == "white"? opponent_color = "black" : opponent_color = "white"
+    opponent_king = game.chess_pieces.where(type: 'King', color: opponent_color).first
+    if opponent_king
+      return valid_move?(opponent_king.x, opponent_king.y)
+    end
+    false
   end
 
   def obstructed?(x_target, y_target)
