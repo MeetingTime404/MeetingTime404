@@ -31,6 +31,40 @@ RSpec.describe ChessPiece, type: :model do
     end
   end
 
+  describe '#get_valid_moves' do
+    let(:user1) { FactoryGirl.create(:user) }
+    let(:user2) { FactoryGirl.create(:user) }
+    let(:game) { FactoryGirl.create(:game) }
+    it 'should get valid moves for king' do
+      king1 = FactoryGirl.create(:king, color: 'white', x: 3, y: 3, user_id: user1.id, game_id: game.id)
+      king2 = FactoryGirl.create(:king, color: 'black', x: 7, y: 7, user_id: user2.id, game_id: game.id)
+      moves = king1.get_valid_moves(king1.x, king1.y)
+      expect(moves.include?({x: king1.x+1, y: king1.y+1})).to eq(true)
+    end
+    it 'should get valid moves for rook' do
+      rook  = FactoryGirl.create(:rook, color: 'white', x: 3, y: 3, user_id: user1.id, game_id: game.id)
+      king1 = FactoryGirl.create(:king, color: 'white', x: 1, y: 1, user_id: user1.id, game_id: game.id)
+      king2 = FactoryGirl.create(:king, color: 'black', x: 7, y: 7, user_id: user2.id, game_id: game.id)
+      moves = rook.get_valid_moves(rook.x, rook.y)
+      expect(moves.include?({x: rook.x, y: rook.y+1})).to eq(true)
+    end
+    it 'should get valid moves for bishop' do
+      bishop = FactoryGirl.create(:bishop, color: 'white', x: 1, y: 3, user_id: user1.id, game_id: game.id)
+      king1 = FactoryGirl.create(:king, color: 'white', x: 1, y: 1, user_id: user1.id, game_id: game.id)
+      king2 = FactoryGirl.create(:king, color: 'black', x: 7, y: 7, user_id: user2.id, game_id: game.id)
+      moves = bishop.get_valid_moves(bishop.x, bishop.y)
+      expect(moves.include?({x: bishop.x+1, y: bishop.y+1})).to eq(true)
+    end
+    it 'should get valid moves for queen' do
+      queen = FactoryGirl.create(:queen, color: 'white', x: 1, y: 3, user_id: user1.id, game_id: game.id)
+      king1 = FactoryGirl.create(:king, color: 'white', x: 1, y: 1, user_id: user1.id, game_id: game.id)
+      king2 = FactoryGirl.create(:king, color: 'black', x: 7, y: 7, user_id: user2.id, game_id: game.id)
+      moves = queen.get_valid_moves(queen.x, queen.y)
+      expect(moves.include?({x: queen.x, y: queen.y+1})).to eq(true)
+      expect(moves.include?({x: queen.x+1, y: queen.y+1})).to eq(true)
+    end
+  end
+
   describe '#move_to' do
     subject(:move_to) { chess_piece.move_to(2, 2) }
     let(:user) { FactoryGirl.create(:user) }

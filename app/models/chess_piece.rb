@@ -24,12 +24,16 @@ class ChessPiece < ApplicationRecord
   end
 
   def capture(x_target, y_target)
+puts "capture"
     target = find_piece(x_target, y_target)
-    target.update_attributes(captured: true, x: nil, y: nil) if target && color != target.color
+puts "capture #{x_target},#{y_target} target"
+    target.update_attributes(captured: true) if target && color != target.color
+    return target
+puts target
   end
 
   def find_piece(x_target, y_target)
-      return ChessPiece.where(game_id: game_id, x: x_target, y: y_target).first
+      return ChessPiece.where(game_id: game_id, x: x_target, y: y_target, captured: false).first
   end
 
   def valid_move?(x_target, y_target)
@@ -56,10 +60,11 @@ class ChessPiece < ApplicationRecord
     false
   end
 
+  # Does my move check the opponent king?
   def checking?
     opponent_king = game.chess_pieces.where(type: 'King', color: opponent_color).first
     raise KingIsMissingError, "for the game #{game.id}" unless opponent_king.present?
-    pieces = game.chess_pieces.where(color: color)
+    pieces = game.chess_pieces.where(color: color, captured: false)
     pieces.each do |piece|
       return true if piece.valid_move?(opponent_king.x.to_i, opponent_king.y.to_i)
     end
@@ -118,7 +123,7 @@ class ChessPiece < ApplicationRecord
   end
 
   def occupied?(x_current, y_current)
-    game.chess_pieces.where(x: x_current, y: y_current).present?
+    game.chess_pieces.where(x: x_current, y: y_current, captured: false).present?
   end
 
   private
@@ -136,6 +141,76 @@ class ChessPiece < ApplicationRecord
     x_dist = (x_target - x).abs
     y_dist = (y_target - y).abs
     x_dist <= 1 && y_dist <= 1 ? true : false
+  end
+
+ def get_valid_moves_with_moves(x, y, moves)
+    return nil if moves.nil?
+    valid_moves = Array.new
+    moves.each do |move|
+      x_target = move[:x]
+      y_target = move[:y]
+      valid_moves << {x: x_target, y: y_target} if 
+                      in_board?(x_target, y_target) && 
+                      valid_move?(x_target, y_target) && 
+                      !illegal_move?(x_target, y_target)
+    end
+    valid_moves
+  end
+
+  def get_moves_with_offsets(x, y, offsets)
+    return nil if offsets.nil?
+    moves = Array.new
+    offsets.each do |offset|
+      x_target = x + offset[:x]
+      y_target = y + offset[:y]
+      moves << {x: x_target, y: y_target}
+    end
+    moves
+  end
+
+  def get_horizontal_moves(x, y)
+    moves = Array.new
+    (MIN_INDEX..MAX_INDEX).each do |x_target|
+      moves << {x: x_target, y: y} if !same_location?(x_target, y)
+    end
+    return moves
+  end
+
+  def get_vertical_moves(x, y)
+    moves = Array.new
+    (MIN_INDEX..MAX_INDEX).each do |y_target|
+      moves << {x: x, y:y_target} if !same_location?(x, y_target)
+    end
+    return moves
+  end
+
+  def get_diagonal_moves(x, y)
+    moves = Array.new
+    # all possible moves in the top right diagonal
+    i = x + 1; j = y + 1
+    while i <= MAX_INDEX && j <= MAX_INDEX
+      moves << {x: i, y: j}
+      i = i + 1; j = j + 1
+    end
+    # all possible moves in the bottom right diagonal
+    i = x + 1; j = y - 1
+    while i <= MAX_INDEX && j >= MIN_INDEX
+      moves << {x: i, y: j}
+      i = i + 1; j = j - 1
+    end
+    # all possible moves in the top left diagonal
+    i = x - 1; j = y + 1
+    while i >= MIN_INDEX && j <= MAX_INDEX
+      moves << {x: i, y: j}
+      i = i - 1; j = j + 1
+    end
+    # all possible moves in the bottom left diagonal
+    i = x - 1; j = y - 1
+    while i >= MIN_INDEX && j >= MIN_INDEX
+      moves << {x: i, y: j}
+      i = i - 1; j = j - 1
+    end
+    return moves
   end
 
   private

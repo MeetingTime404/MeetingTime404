@@ -23,4 +23,10 @@ class Knight < ChessPiece
   def obstructed?(*)
     false
   end
+
+  def get_valid_moves(x, y)
+    moves = get_moves_with_offsets(x, y, @@offsets)
+    return get_valid_moves_with_moves(x, y, moves)
+  end
+
 end

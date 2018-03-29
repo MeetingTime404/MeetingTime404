@@ -75,6 +75,27 @@ class Game < ApplicationRecord
     false
   end
 
+  def stalemate?(color)
+    return false if status == "in_checck"
+    pieces = chess_pieces.where(color: color, captured: false)
+    pieces.each do |piece|
+      x_piece = piece.x
+      y_piece = piece.y
+      moves = piece.get_valid_moves(x_piece, y_piece)
+      moves.each do |move|
+        x_target = move[:x]
+        y_target = move[:y]
+        target = piece.capture(x_target, y_target) if piece.occupied?(x_target, y_target)
+        piece.update_attributes(x: x_target, y: y_target) # pseudo move
+        in_check = in_check?(color) # determine if we get checked
+        piece.update_attributes(x: x_piece, y: y_piece) # undo pseudo move
+        target.update_attributes(captured: false) if target.present? # undo capture
+        return false if !in_check
+      end
+    end
+    return true
+  end
+
   def swap_turn
     change = turn == 'white' ? 'black' : 'white'
     update_attributes(turn: change)
@@ -133,9 +154,9 @@ class Game < ApplicationRecord
 
     King.create(game_id: id, x: 4, y: 7, user_id: black_player_id, color: "black")
   end
-  
+
   def get_piece(type, color)
-    chess_pieces.where(type: type, color: color).first
+    chess_pieces.where(type: type, color: color, captured: false).first
   end
 
   def opponent_color(color)
@@ -143,7 +164,7 @@ class Game < ApplicationRecord
   end
 
   def opponent_pieces(color)
-    chess_pieces.where(color: opponent_color(color))
+    chess_pieces.where(color: opponent_color(color), captured: false)
   end
 
 end
