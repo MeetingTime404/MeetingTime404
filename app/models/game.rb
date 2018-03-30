@@ -28,6 +28,10 @@ class Game < ApplicationRecord
     status == 'in_progress'
   end
 
+  def in_check?
+    status == 'in_check'
+  end
+
   def assign_first_turn
     update_attributes(turn: 'white')
   end
@@ -61,12 +65,12 @@ class Game < ApplicationRecord
   end
 
   def color_in_check
-    return "white" if in_check?("white")
-    return "black" if in_check?("black")
+    return "white" if checked_color("white")
+    return "black" if checked_color("black")
     nil
   end
 
-  def in_check?(color)
+  def checked_color(color)
     king = get_piece('King', color)
     raise KingIsMissingError, "for the game #{id}" unless king.present?
     opponent_pieces(color).each do |opponent|
@@ -89,21 +93,22 @@ class Game < ApplicationRecord
         y: 1,
         user_id: white_player_id,
         color: "white",
+        captured: 'false'
         )
     end
 
-    Rook.create(game_id: id, x: 0, y: 0, user_id: white_player_id, color: "white")
-    Rook.create(game_id: id, x: 7, y: 0, user_id: white_player_id, color: "white")
+    Rook.create(game_id: id, x: 0, y: 0, user_id: white_player_id, color: "white", captured: 'false')
+    Rook.create(game_id: id, x: 7, y: 0, user_id: white_player_id, color: "white", captured: 'false')
 
-    Knight.create(game_id: id, x: 1, y: 0, user_id: white_player_id, color: "white")
-    Knight.create(game_id: id, x: 6, y: 0, user_id: white_player_id, color: "white")
+    Knight.create(game_id: id, x: 1, y: 0, user_id: white_player_id, color: "white", captured: 'false')
+    Knight.create(game_id: id, x: 6, y: 0, user_id: white_player_id, color: "white", captured: 'false')
 
-    Bishop.create(game_id: id, x: 2, y: 0, user_id: white_player_id, color: "white")
-    Bishop.create(game_id: id, x: 5, y: 0, user_id: white_player_id, color: "white")
+    Bishop.create(game_id: id, x: 2, y: 0, user_id: white_player_id, color: "white", captured: 'false')
+    Bishop.create(game_id: id, x: 5, y: 0, user_id: white_player_id, color: "white", captured: 'false')
 
-    Queen.create(game_id: id, x: 3, y: 0, user_id: white_player_id, color: "white")
+    Queen.create(game_id: id, x: 3, y: 0, user_id: white_player_id, color: "white", captured: 'false')
 
-    King.create(game_id: id, x: 4, y: 0, user_id: white_player_id, color: "white")
+    King.create(game_id: id, x: 4, y: 0, user_id: white_player_id, color: "white", captured: 'false')
   end
 
   def populate_black_pieces
@@ -117,21 +122,22 @@ class Game < ApplicationRecord
         y: 6,
         user_id: black_player_id,
         color: "black",
+        captured: 'false'
         )
     end
 
-    Rook.create(game_id: id, x: 0, y: 7, user_id: black_player_id, color: "black")
-    Rook.create(game_id: id, x: 7, y: 7, user_id: black_player_id, color: "black")
+    Rook.create(game_id: id, x: 0, y: 7, user_id: black_player_id, color: "black", captured: 'false')
+    Rook.create(game_id: id, x: 7, y: 7, user_id: black_player_id, color: "black", captured: 'false')
 
-    Knight.create(game_id: id, x: 1, y: 7, user_id: black_player_id, color: "black")
-    Knight.create(game_id: id, x: 6, y: 7, user_id: black_player_id, color: "black")
+    Knight.create(game_id: id, x: 1, y: 7, user_id: black_player_id, color: "black", captured: 'false')
+    Knight.create(game_id: id, x: 6, y: 7, user_id: black_player_id, color: "black", captured: 'false')
 
-    Bishop.create(game_id: id, x: 2, y: 7, user_id: black_player_id, color: "black")
-    Bishop.create(game_id: id, x: 5, y: 7, user_id: black_player_id, color: "black")
+    Bishop.create(game_id: id, x: 2, y: 7, user_id: black_player_id, color: "black", captured: 'false')
+    Bishop.create(game_id: id, x: 5, y: 7, user_id: black_player_id, color: "black", captured: 'false')
 
-    Queen.create(game_id: id, x: 3, y: 7, user_id: black_player_id, color: "black")
+    Queen.create(game_id: id, x: 3, y: 7, user_id: black_player_id, color: "black", captured: 'false')
 
-    King.create(game_id: id, x: 4, y: 7, user_id: black_player_id, color: "black")
+    King.create(game_id: id, x: 4, y: 7, user_id: black_player_id, color: "black", captured: 'false')
   end
   
   def get_piece(type, color)

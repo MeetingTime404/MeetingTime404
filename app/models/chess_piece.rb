@@ -14,12 +14,14 @@ class ChessPiece < ApplicationRecord
 
   def move_to(x_target, y_target)
     return false unless valid_move?(x_target, y_target)
-    return false if illegal_move?(x_target, y_target)
+    if illegal_move?(x_target, y_target)
+      return false
+    else
+      game.update_attributes(status: 'in_progress')
+    end
     capture(x_target, y_target) if occupied?(x_target, y_target)
     update_attributes(x: x_target, y: y_target)
-    if checking?
-      game.update_attributes(status: "in_check")
-    end
+    game.update_attributes(status: "in_check") if checking?
     true
   end
 
@@ -51,7 +53,7 @@ class ChessPiece < ApplicationRecord
       y_check = king.y
     end
     opponent_pieces.each do |opponent|
-      return true if opponent.valid_move?(x_check.to_i, y_check.to_i)
+      return true if opponent.valid_move?(x_check, y_check)
     end
     false
   end
@@ -59,7 +61,7 @@ class ChessPiece < ApplicationRecord
   def checking?
     opponent_king = game.chess_pieces.where(type: 'King', color: opponent_color).first
     raise KingIsMissingError, "for the game #{game.id}" unless opponent_king.present?
-    pieces = game.chess_pieces.where(color: color)
+    pieces = game.chess_pieces.where(color: color, captured: false)
     pieces.each do |piece|
       return true if piece.valid_move?(opponent_king.x.to_i, opponent_king.y.to_i)
     end

@@ -7,6 +7,8 @@
   <% else %>
     <div class="text-center"><h4>Opponent's turn !<h4></div>
   <% end %>
+<% elsif @game.in_check? %>
+  <div class="text-center"><h4>Check !<h4></div>
 <% elsif @game.completed? %>
   <div class="text-center"><h4>Game has ended !<h4></div>
 <% end %>
@@ -65,7 +67,7 @@
       <% end %>
     </div>
   <% end %>
-  <div class="row">
+  <div class="row column-label-row">
     <div class="last-label">*</div>
     <div class="column-label">A</div>
     <div class="column-label">B</div>
@@ -76,4 +78,9 @@
     <div class="column-label">G</div>
     <div class="column-label">H</div>
   </div>
+</div>
+<div class="captured-box">
+    <% @captured_pieces.each do |piece| %>
+        <%= image_tag "#{piece.type}_#{piece.color}.png" %>
+    <% end %>    
 </div>

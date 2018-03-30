@@ -249,28 +249,28 @@ RSpec.describe Game, type: :model do
     let(:game) { FactoryGirl.create(:game, white_player_id: user1.id, black_player_id: user2.id) }
     context 'when nothing in check' do
       before do
-        allow(game).to receive(:in_check?).and_return(false)
+        allow(game).to receive(:checked_color).and_return(false)
       end
       it { is_expected.to eq nil }
     end
     context 'when white is in check' do
       before do
-        allow(game).to receive(:in_check?).with("black").and_return(false)
-        allow(game).to receive(:in_check?).with("white").and_return(true)
+        allow(game).to receive(:checked_color).with("black").and_return(false)
+        allow(game).to receive(:checked_color).with("white").and_return(true)
       end
       it { is_expected.to eq "white" }
     end
     context 'when black is in check' do
       before do
-        allow(game).to receive(:in_check?).with("black").and_return(true)
-        allow(game).to receive(:in_check?).with("white").and_return(false)
+        allow(game).to receive(:checked_color).with("black").and_return(true)
+        allow(game).to receive(:checked_color).with("white").and_return(false)
       end
       it { is_expected.to eq "black" }
     end
   end
 
   describe '#in_check? unit test' do
-    subject(:in_check?) { game.in_check?('white') }
+    subject(:checked_color) { game.checked_color('white') }
     let(:user1) { FactoryGirl.create(:user) }
     let(:user2) { FactoryGirl.create(:user) }
     let(:game) { FactoryGirl.create(:game, white_player_id: user1.id, black_player_id: user2.id) }
