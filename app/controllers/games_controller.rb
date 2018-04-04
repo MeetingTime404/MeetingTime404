@@ -28,6 +28,7 @@ class GamesController < ApplicationController
 
   def show
     @current_player_color = current_player_color
+    @captured_pieces = chess_pieces.where(captured: true)
     if params[:chess_piece_id]
       @selected_piece = ChessPiece.find(params[:chess_piece_id])
     end
@@ -49,18 +50,29 @@ class GamesController < ApplicationController
   end
 
   def move_piece
-    if @game.in_progress?
+    if @game.in_progress? || @game.in_check?
       piece = ChessPiece.find(params[:chess_piece_id])
       if current_user.id == piece.user_id
         if piece.move_to(params[:x_target].to_i, params[:y_target].to_i)
           current_game.swap_turn
+          ActionCable.server.broadcast 'turns',
+            game_path: game_path,
+            game_id: @game.id,
+            user_played_id: current_user.id,
+            refresh: true,
+            turn_pop_up: "Your turn!"
+          head :ok
         else
-          flash[:notice] = "Can't do that!"
+          ActionCable.server.broadcast 'turns',
+            game_path: game_path,
+            game_id: @game.id,
+            user_played_id: current_user.id,
+            refresh: true,
+            error_pop_up: "Can't do that!"
+          head :ok
         end
-        redirect_to current_game
       else
         flash[:notice] = 'This is not your piece!'
-        redirect_to "/games/#{@game.id}"
       end
     end
   end

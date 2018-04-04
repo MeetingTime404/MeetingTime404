@@ -36,3 +36,9 @@ a.cell.selected-square div img {
 div.board div.row .cell.selected-square {
   box-shadow: inset 0 0 0 5px rgba(242, 50, 24, 0.9);
 }
+.captured-box {
+  margin-left: 50px;
+}
+.captured-box img {
+  height: 30px;
+}

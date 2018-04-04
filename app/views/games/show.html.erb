@@ -7,13 +7,15 @@
   <% else %>
     <div class="text-center"><h4>Opponent's turn !<h4></div>
   <% end %>
+<% elsif @game.in_check? %>
+  <div class="text-center"><h4>Check !<h4></div>
 <% elsif @game.completed? %>
   <div class="text-center"><h4>Game has ended !<h4></div>
 <% end %>
   
 <%= link_to "forfeit", game_forfeit_path(@game), method: :post unless @game.game_over? %>
 
-<div class="board">
+<div class="board" data-game-id=<%= @game.id %> data-user-id=<%= current_user.id %>>
   <% 7.downto(0) do |y| %>
     <div class="row">
       <div class="label"><%= "#{y + 1}" %></div>
@@ -65,7 +67,7 @@
       <% end %>
     </div>
   <% end %>
-  <div class="row">
+  <div class="row column-label-row">
     <div class="last-label">*</div>
     <div class="column-label">A</div>
     <div class="column-label">B</div>
@@ -76,4 +78,9 @@
     <div class="column-label">G</div>
     <div class="column-label">H</div>
   </div>
+</div>
+<div class="captured-box">
+    <% @captured_pieces.each do |piece| %>
+        <%= image_tag "#{piece.type}_#{piece.color}.png" %>
+    <% end %>    
 </div>
