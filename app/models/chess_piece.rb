@@ -1,8 +1,6 @@
 # Common methods for all pieces
 class ChessPiece < ApplicationRecord
-
   class KingIsMissingError < StandardError; end
-
   belongs_to :game
   belongs_to :user
 
@@ -14,12 +12,14 @@ class ChessPiece < ApplicationRecord
 
   def move_to(x_target, y_target)
     return false unless valid_move?(x_target, y_target)
-    return false if illegal_move?(x_target, y_target)
+    if illegal_move?(x_target, y_target)
+      return false
+    else
+      game.update_attributes(status: 'in_progress')
+    end
     capture(x_target, y_target) if occupied?(x_target, y_target)
     update_attributes(x: x_target, y: y_target)
-    if checking?
-      game.update_attributes(status: "in_check")
-    end
+    game.update_attributes(status: "in_check") if checking?
     true
   end
 
@@ -29,29 +29,61 @@ class ChessPiece < ApplicationRecord
   end
 
   def find_piece(x_target, y_target)
-      return ChessPiece.where(game_id: game_id, x: x_target, y: y_target).first
+    return ChessPiece.where(game_id: game_id, x: x_target, y: y_target).first
   end
 
   def valid_move?(x_target, y_target)
     return false if same_location?(x_target, y_target)
     return false unless in_board?(x_target, y_target)
     return false if obstructed?(x_target, y_target)
+    return false if friendly_fire?(x_target, y_target)
     true
   end
 
   # illegal_move places or leaves one's king in check.
   def illegal_move?(x_target, y_target)
+    method_return = false
+    original_coord = [x, y]
+    king_coord = find_king_coord(x_target, y_target)
+    temp_capt_id_and_coord = temp_capture(x_target, y_target) if occupied?(x_target, y_target)
+    #temporarly move piece to verify check status
+    update_attributes(x: x_target, y: y_target)
+    method_return = true if king_in_check?(king_coord[0], king_coord[1])
+    #return moved piece to it's original coord
+    update_attributes(x: original_coord[0], y: original_coord[1])
+    #return captured piece if there is
+    undo_temp_capture(temp_capt_id_and_coord[0], temp_capt_id_and_coord[1]) unless temp_capt_id_and_coord.nil?
+    return method_return
+  end
+
+  def temp_capture(x_target, y_target)
+    #temporarly remove a piece that would be capture while verifying check status in case it would remove check status
+    piece = find_piece(x_target, y_target)
+    id_and_coord = [piece.id, [piece.x, piece.y]]
+    capture(x_target, y_target)
+    return id_and_coord
+  end
+
+  def find_king_coord(x_target, y_target)
+    #determine king position
+    king_coord =[]
     if type == 'King'
-      x_check = x_target
-      y_check = y_target
+      king_coord << x_target << y_target
     else
       king = game.chess_pieces.where(type: 'King', color: color).first
-      raise KingIsMissingError, "for the game #{game.id}" unless king.present?
-      x_check = king.x
-      y_check = king.y
+      king_coord << king.x << king.y
     end
+    return king_coord
+  end
+
+  def undo_temp_capture(id, coord)
+    piece = ChessPiece.where(id: id).first
+    piece.update_attributes(x: coord[0], y: coord[1], captured: false)
+  end
+
+  def king_in_check?(king_x, king_y)
     opponent_pieces.each do |opponent|
-      return true if opponent.valid_move?(x_check.to_i, y_check.to_i)
+      return true if opponent.valid_move?(king_x, king_y)
     end
     false
   end
@@ -59,7 +91,7 @@ class ChessPiece < ApplicationRecord
   def checking?
     opponent_king = game.chess_pieces.where(type: 'King', color: opponent_color).first
     raise KingIsMissingError, "for the game #{game.id}" unless opponent_king.present?
-    pieces = game.chess_pieces.where(color: color)
+    pieces = game.chess_pieces.where(color: color, captured: false)
     pieces.each do |piece|
       return true if piece.valid_move?(opponent_king.x.to_i, opponent_king.y.to_i)
     end
@@ -117,8 +149,19 @@ class ChessPiece < ApplicationRecord
     false
   end
 
+  def friendly_fire?(x_target, y_target)
+    target_piece = find_piece(x_target, y_target)
+    target_piece.nil? ? false : (color == target_piece.color)
+  end
+
   def occupied?(x_current, y_current)
     game.chess_pieces.where(x: x_current, y: y_current).present?
+  end
+
+  def moved_yet?
+    # temporarly short cutting this method until the Moves db is set up
+    #updated_at != created_at
+    false
   end
 
   private
@@ -138,8 +181,6 @@ class ChessPiece < ApplicationRecord
     x_dist <= 1 && y_dist <= 1 ? true : false
   end
 
-  private
-
   def opponent_color
     return "black" if color == "white"
     "white"
@@ -148,5 +189,4 @@ class ChessPiece < ApplicationRecord
   def opponent_pieces
     game.chess_pieces.where(color: opponent_color, captured: false)
   end
-
 end

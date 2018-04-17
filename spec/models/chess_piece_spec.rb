@@ -55,7 +55,7 @@ RSpec.describe ChessPiece, type: :model do
           before do
             allow(chess_piece).to receive(:checking?).and_return(checking?)
           end
-          it "status should equls in_check" do
+          it "status should equal in_check" do
             move_to
             expect(game.status).to eq "in_check"
           end
@@ -184,5 +184,42 @@ RSpec.describe ChessPiece, type: :model do
       # start 4, 4 => 2, 2
       expect(rook.obstructed?(2, 2)).to eq(false)
     end
+  end
+
+  describe '.friendly_fire?' do
+    let(:user1) { FactoryGirl.create(:user) }
+    let(:user2) { FactoryGirl.create(:user) }
+    let(:game) { FactoryGirl.create(:game) }
+    let(:white_queen) { FactoryGirl.create(:queen, x: 4, y: 4, user_id: user1.id, game_id: game.id) }
+
+    it 'should return True if target square is occupied by a same color piece' do
+      FactoryGirl.create(:pawn, x: 4, y: 5, user_id: user1.id, game_id: game.id)
+      expect(white_queen.friendly_fire?(4, 5)).to eq(true)
+    end
+
+    it 'should return False if target square is inoccupied' do
+      expect(white_queen.friendly_fire?(3, 4)).to eq(false)
+    end
+
+    it 'should return False if target square is different color' do
+      FactoryGirl.create(:pawn, x: 4, y: 3, color: 'black', user_id: user2.id, game_id: game.id)
+      expect(white_queen.friendly_fire?(4, 3)).to eq(false)
+    end
+  end
+
+  describe '.moved_yet?' do
+    let(:user1) { FactoryGirl.create(:user) }
+    let(:game) { FactoryGirl.create(:game) }
+    let(:piece) { FactoryGirl.create(:queen, x: 4, y:4, user_id: user1.id, game_id: game.id) }
+
+    it 'should return false if piece has not moved' do
+      expect(piece.moved_yet?).to eq(false)
+    end
+
+    # removing this until Moves db is set up
+    # it 'should return true if piece has moved' do
+    #   piece.update_attributes(captured: true)
+    #   expect(piece.moved_yet?).to eq(true)
+    # end
   end
 end

@@ -1,0 +1,20 @@
+language: ruby
+rvm:
+- 2.3.1
+env:
+- DB=postgresql
+before_script:
+- RAILS_ENV=test bundle exec rake db:create db:migrate --trace
+- bundle exec rake assets:precompile
+- bundle exec rspec test/
+deploy:
+  provider: heroku
+  api_key:
+    secure: CIX7lR1JTt/3BPIkRtFi9DoHQLarx7XjjJ/lVM1oOM5HW5ezFesder4fj41X5RG2XWsSQAAnv5oQDRfQm1Wk686FaTk06aY0i2ivoUeN1qQDSRfzKykceX8JiK4ECWLeU/DNkExGDt9zOfPbY0uNb08Jr8x9mz2WXr/iMy21zeiYcAaJrBnQuAl14IW1Q1+Up4gRGH78hNvA3WIHfpmczlrbIQhpsSBVwkX3rShDqgDjYqeQBz0rstdPv9Xf8MLNyupms5YWBL6KXVjweMuocw44yzoA6O96+f318Th0AMn4xAuqfyOp7ztzBmfd2uDk7MM/qAcyG40j8AaOikN5tIUlANCjQoxCS3KD5RIc5jHZvgXKQQsOEhTzyY6Pp2O0XTg5olF+fuf4JSLNooZ3gI3APSl9mMCCZCcJ/pvkuY/Bzm24O4r42JEjUwt6w0HX77RaofQTO5KpYPomYX1HDX96rxzAyZQuQMaC/Z6oHXhPGmUgbTmpMki/D7Ns7lkZlfCnYhL+XTzdcx8sjkXiTvwPgYRiGqjpuXG8MCLPKj7tnWUNnIJ/tZUWfgYdVLuawXdXErjlwJIL0LUMoLWXW8ky7Puue/JwnpKqkwmDczzaEz8jeXUehfje0sqsFVPj/UC6lovwn2joMaI1Fx7/Qf8Vptcx4/+B+UHLWuTQ3Lw=
+  app: chessbored
+  on:
+    repo: Muzzh/MeetingTime404
+  run:
+  - "rake db:migrate"
+  - restart
+  - "rake cleanup"
